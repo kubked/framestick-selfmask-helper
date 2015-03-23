@@ -1,0 +1,26 @@
+
+#network-graph {
+	height: 400pt;
+	background-color: #e5e5e5;
+}
+
+body {
+	background-color: #cccccc;
+}
+
+.container {
+	background-color: #eeeeee;
+}
+
+#populations-number-panel, #reinitialize-panel {
+	margin: 10pt;
+}
+
+.selfmask-panel {
+	margin-bottom: 50pt;
+}
+
+input.hexes {
+	padding: 3px;
+	font-size: 12px;
+}
