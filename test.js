@@ -51,8 +51,20 @@ describe("Connections to bitmasks conversion tests", function() {
 			expect(connections).toEqual(
 				SelfmaskPluginManager.masksToConnections(
 					SelfmaskPluginManager.connectionsToMasks(connections, popSize), popSize
-				)
+				)()
 			);
 		});
 	}
+});
+
+describe("Selfmask utils functions", function() {
+    it("int to hex test 1", function() {
+        expect("0x000000ff").toEqual(SelfmaskPluginManager.intToHex(255));
+    });
+    it("int to hex test 2", function () {
+        expect("0x00000000").toEqual(SelfmaskPluginManager.intToHex(0));
+    });
+    it("int to hex test 3", function () {
+        expect("0xffffffff").toEqual(SelfmaskPluginManager.intToHex(4294967295));
+    });
 });
