@@ -109,7 +109,7 @@ $(function () {
             for (var j = 0; j < populationsCount; ++j) {
                 var cell = $("<td/>");
                 if (j >= i) {
-                    var select = $("<select class='select combobox'/>")
+                    var select = $("<select class='select combobox form-control input-sm'/>")
 						.data("first", i + 1)
 						.data("second", j + 1)
                         .change($.proxy(this.selectChanged, this));
