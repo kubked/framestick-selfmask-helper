@@ -51,7 +51,7 @@ describe("Connections to bitmasks conversion tests", function() {
 			expect(connections).toEqual(
 				SelfmaskPluginManager.masksToConnections(
 					SelfmaskPluginManager.connectionsToMasks(connections, popSize), popSize
-				)()
+				)
 			);
 		});
 	}
