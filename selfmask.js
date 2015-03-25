@@ -341,11 +341,52 @@ $(function () {
             return connections;
         },
 
+        resetInputNamesValues: function() {
+            var names = this.names;
+            $(".name-input").each(function (key, val) {
+                var $this = $(this);
+                var num = $this.data('number');
+                $this.val(names[num-1]);
+            });
+        },
+
+        rebuildNamesPanel: function() {
+            var panel = $("#populations-names-panel");
+            panel.empty();
+
+            for (var i = 1; i <= this.populationsCount; ++i) {
+                var wrapper = $('<div class="col-md-3"/>');
+                var input = $('<input type="text" class="form-control input-sm name-input"/>');
+                input.data('number', i);
+                wrapper.append(input);
+                panel.append(wrapper);
+            }
+            this.resetInputNamesValues();
+            $('.name-input').change($.proxy(SelfmaskPluginManager.namesChanged, SelfmaskPluginManager));
+        },
+
         rebuild: function () {
+            this.rebuildNamesPanel();
+
             this.plugins.forEach(function (elem) {
                 console.log("initializing plugin: ", elem);
                 elem.rebuild(this.populationsCount, this.names, this.connections);
             }, this);
+        },
+
+        namesChanged: function() {
+            if ($('.name-input').is(function() {
+                    return $(this).val() == '';
+                })) {
+                resetInputNamesValues();
+            } else {
+                var names = [];
+                $('.name-input').each( function(key, val) {
+                    names[$(this).data('number')-1] = $(this).val();
+                });
+                this.names = names;
+                this.rebuild();
+            }
         },
 
         setConnections: function (connections) {
@@ -393,9 +434,7 @@ $(function () {
     };
 
     SelfmaskPluginManager.init();
-    $("#reinitialize-button").click(function () {
-        SelfmaskPluginManager.init();
-    });
+    
     $("#populations-count-select").change(function () {
         SelfmaskPluginManager.setPopulationsCount($(this).val());
     })
