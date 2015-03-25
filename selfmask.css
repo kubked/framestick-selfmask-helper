@@ -16,8 +16,8 @@ body {
 	margin: 10pt;
 }
 
-.selfmask-panel {
-	margin-bottom: 50pt;
+.settings-panel {
+	margin: 10px;
 }
 
 input.hexes {

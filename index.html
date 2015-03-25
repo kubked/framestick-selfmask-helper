@@ -1,57 +1,68 @@
 <html>
-<head>
-<script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
-<link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
-<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.3.8/cytoscape.min.js"></script>
-<link href="selfmask.css" rel="stylesheet" type="text/css" />
-<script type="text/javascript" src="selfmask.js"> </script>
-</head>
-<body class="body">
-	<div class="container">
-        <h2>Selfmask & othermask helper</h2>
-        <div class="row">
-            <div class="col-md-2">
-                <h3>Settings</h3>
+    <head>
+        <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+        <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.3.8/cytoscape.min.js"></script>
+        <link href="selfmask.css" rel="stylesheet" type="text/css" />
+        <script type="text/javascript" src="selfmask.js"> </script>
+    </head>
+    <body class="body">
+    	<div class="container">
+            <h2>Selfmask & othermask helper</h2>
+    		<div class="row">
+    			<div class="col-md-6">
+                    <h3>Collisions grid</h3>
+    				<div id="combobox-panel" class="selfmask-panel"></div>
+                    <h3>Selfmask & othermask</h3>
+    				<div id="hexes-panel" class="selfmask-panel"></div>
+    			</div>
+    			<div class="col-md-6">
+                    <h3>Collisions network</h3>
+    				<div id="network-graph" class="selfmask-panel"></div>
+    			</div>
+    		</div>
+            <div class="row">
+                <div class="col-md-2">
+                    <h3>Settings</h3>
+                </div>
             </div>
-        </div>
-		<div class="row">
-            <div class="col-md-3">
-                <form class="form-horizontal">
-                    <div class="form-group form-group-sm">
-                        <label class="col-sm-8 control-label" for="populations-count-select">Number of populations:</label>
-                        <div class="col-sm-4">
-                            <select class="select form-control input-sm" id="populations-count-select">
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                            </select>
+            <div class="row form-horizontal settings-panel">
+                <div class="form-group">
+                    <label class="control-label col-md-2" for="populations-count-select">Number of populations:</label>
+                    <div class="col-md-2">
+                        <select class="select form-control input-sm" id="populations-count-select">
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-md-2" for="populations-names-panel">Populations names:</label>
+                    <div class="form-group row col-md-10" id="populations-names-panel">
+                        <div class="col-md-3">
+                            <input type="text" class="form-control input-sm"/>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control input-sm"/>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control input-sm"/>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control input-sm"/>
                         </div>
                     </div>
-                </form>
+                </div>
             </div>
-            <div class="col-md-1">
+            <div class="row">
+                <div class="col-md-6">
+                    <div id="reinitialize-panel">
+                        <button type="button" id="reinitialize-button">Reinitialize</button>
+                    </div>
+                </div>
             </div>
-		</div>
-		<div class="row">
-			<div class="col-md-6">
-                <h3>Collisions grid</h3>
-				<div id="combobox-panel" class="selfmask-panel"></div>
-                <h3>Selfmask & othermask</h3>
-				<div id="hexes-panel" class="selfmask-panel"></div>
-			</div>
-			<div class="col-md-6">
-                <h3>Collisions network</h3>
-				<div id="network-graph" class="selfmask-panel"/>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col-md-6">
-				<div id="reinitialize-panel">
-					<button type="button" id="reinitialize-button">Reinitialize</button>
-				</div>
-			</div>
-		</div>
-	</div>
-</body>
+    	</div>
+    </body>
 </html>
