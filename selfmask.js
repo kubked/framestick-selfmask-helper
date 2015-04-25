@@ -61,7 +61,7 @@ $(function () {
      */
     function getHashParams() {
         // IMPORTANT: parsing users input
-        var s = window.location.hash.substring(1);
+        var s = decodeURIComponent(window.location.hash.substring(1));
         var arguments = s.split("&");
         var result = {
             populationsCount: 0,
@@ -100,7 +100,7 @@ $(function () {
             s = s.concat("&s" + (i + 1) + "=" + masks.selfmasks[i + 1]);
             s = s.concat("&o" + (i + 1) + "=" + masks.othermasks[i + 1]);
         }
-        window.location.hash = s;
+        window.location.hash = encodeURIComponent(s);
     }
 
     /**
