@@ -707,13 +707,10 @@ $(function () {
                 this.connections = this.masksToConnections(params.masks,
                     this.populationsCount
                 );
-            } else {
-                this.names = [];
-                for (var i = 1; i <= this.populationsCount; ++i) {
-                    this.names.push("Pop " + i);
-                }
             }
-
+            for (var i = this.names.length + 1; i <= 4; i++) {
+                this.names.push("Pop " + i);
+            }
             $("#populations-count-select").val(this.populationsCount);
 
             this.rebuild();
