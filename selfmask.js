@@ -1,6 +1,9 @@
 var SelfmaskPluginManager;
 
 $(function () {
+    /**
+     * Point class
+     */
     function Point (x, y) {
         this.x = x || 0;
         this.y = y || 0;
@@ -38,7 +41,6 @@ $(function () {
         return new Point(this.x * scalar, this.y * scalar);
     };
 
-
     /**
      * offset = 0.0 - 1.0
      */
@@ -49,6 +51,61 @@ $(function () {
         );
     }
 
+    function shouldCheck(std, value) {
+        return (std && (value == 'both' || value == 'std')) ||
+                (!std && (value == 'both' || value == 'own'));
+    }
+
+    /**
+     * url hash helpers
+     */
+    function getHashParams() {
+        // IMPORTANT: parsing users input
+        var s = window.location.hash.substring(1);
+        var arguments = s.split("&");
+        var result = {
+            populationsCount: 0,
+            populationsNames: [],
+            masks: {
+                selfmasks: {},
+                othermasks: {}
+            }
+        };
+        var keys = {};
+        for (var i = 0; i < arguments.length; i++) {
+            var keyvalue = arguments[i].split('=');
+            if (keyvalue.length != 2) return;
+            keys[keyvalue[0]] = keyvalue[1];
+        }
+
+        if (!("pc" in keys) || isNaN(keys["pc"])) return;
+        result.populationsCount = keys.pc;
+
+        for (var i = 0; i < result.populationsCount; i++) {
+            if (!(("n" + i) in keys)) return;
+            result.populationsNames.push(keys["n" + i]);
+            if (!(("s" + (i+1)) in keys) || isNaN(keys["s" + (i+1)])) return;
+            result.masks.selfmasks[i+1] = keys["s" + (i+1)];
+            if (!(("o" + (i+1)) in keys) || isNaN(keys["o" + (i+1)])) return;
+            result.masks.othermasks[i+1] = keys["o" + (i+1)];
+        }
+        return result;
+    }
+
+    function setHashParams(populationsCount, populationsNames, masks) {
+        var s = "pc=" + populationsCount;
+        for (var i = 0; i < populationsCount; i++)
+            s = s.concat("&n" + i + "=" + populationsNames[i]);
+        for (var i = 0; i < populationsCount; i++) {
+            s = s.concat("&s" + (i + 1) + "=" + masks.selfmasks[i + 1]);
+            s = s.concat("&o" + (i + 1) + "=" + masks.othermasks[i + 1]);
+        }
+        window.location.hash = s;
+    }
+
+    /**
+     * Canvas graph plugin
+     */
     function CanvasNetworkPlugin() {
         this.canvas = document.getElementById("network-graph")
         this.context = this.canvas.getContext("2d");
@@ -156,6 +213,28 @@ $(function () {
             this.context.stroke();
         }
     };
+    CanvasNetworkPlugin.prototype.drawWaveCircle = function(p1, radius) {
+        this.context.strokeStyle = this.waveColor;
+        this.context.lineWidth = this.waveLineWidth;
+        var offset = this.waveLineLength / (2 * Math.PI * radius) * 0.9;
+        var curr = 0.0;
+        while (curr < 1.0) {
+            this.context.beginPath();
+            var q1 = pointOnCircle(p1, radius, curr);
+            curr += offset;
+            var q2 = pointOnCircle(p1, radius + this.waveLineLength * 1.5, curr);
+            curr += offset;
+            var q3 = pointOnCircle(p1, radius, curr);
+            this.context.moveTo(q1.x, q1.y);
+            this.context.quadraticCurveTo(q2.x, q2.y, q3.x, q3.y);
+            curr += offset;
+            q2 = pointOnCircle(p1, radius - this.waveLineLength * 1.5, curr);
+            curr += offset;
+            q3 = pointOnCircle(p1, radius, curr);
+            this.context.quadraticCurveTo(q2.x, q2.y, q3.x, q3.y);
+            this.context.stroke();
+        }
+    }
     CanvasNetworkPlugin.prototype.drawNode = function (position, name) {
         this.context.fillStyle = "#999";
         this.context.beginPath();
@@ -169,7 +248,9 @@ $(function () {
         this.context.fillText(name, position.x, position.y);
 
     };
-    CanvasNetworkPlugin.prototype.drawNodes = function (populationsCount, names, positions) {
+    CanvasNetworkPlugin.prototype.drawNodes = function (populationsCount,
+                                                        names,
+                                                        positions) {
         for (var i = 0; i < populationsCount; i++) {
             this.drawNode(positions[i], names[i]);
         }
@@ -177,22 +258,27 @@ $(function () {
     CanvasNetworkPlugin.prototype.drawConnections = function (connections, positions) {
         for (var from in connections) {
             for (var to in connections[from]) {
+                var selfPosition = positions[from - 1].add(
+                                -this.getNodeRadius() * 0.8,
+                                -this.getNodeRadius() * 0.8
+                            ),
+                    selfRadius = this.getNodeRadius() * 0.8;
                 if (connections[from][to] == "both" || connections[from][to] == "own")
                     if (to == from)
-                        this.drawDashedCircle(
-                            positions[from - 1].add(
-                                -this.getNodeRadius()*0.8,
-                                -this.getNodeRadius()*0.8
-                            ),
-                            this.getNodeRadius()*0.8
-                        );
+                        this.drawDashedCircle(selfPosition, selfRadius);
                     else
                         this.drawDashedLine(
                             positions[from - 1],
                             positions[to - 1]
                         );
                 if (connections[from][to] == "both" || connections[from][to] == "std")
-                    this.drawWaveLine(positions[from - 1], positions[to - 1]);
+                    if (to == from)
+                        this.drawWaveCircle(selfPosition, selfRadius);
+                    else
+                        this.drawWaveLine(
+                            positions[from - 1],
+                            positions[to - 1]
+                        );
             }
         }
     };
@@ -238,6 +324,10 @@ $(function () {
 			$('<option value="own" class="connection-own">Custom</option>'),
 			$('<option value="both" class="connection-both">Both</option>')
         ];
+        this.checkboxes = [
+            ["Standard", "S", $('<input type="checkbox" name="std" class="connection std"/>')],
+            ["Custom", "C", $('<input type="checkbox" name="own" class="connection own"/>')]
+        ];
     };
 
     ComboboxSelfmaskPlugin.prototype = new TablePlugin;
@@ -256,14 +346,20 @@ $(function () {
             for (var j = 0; j < populationsCount; ++j) {
                 var cell = $("<td/>");
                 if (j >= i) {
-                    var select = $("<select class='select combobox form-control input-sm'/>")
-						.data("first", i + 1)
-						.data("second", j + 1)
-                        .change($.proxy(this.selectChanged, this));
-                    this.options.forEach(function (elem) {
-                        select.append(elem.clone());
-                    });
-                    cell.append(select);
+                    for (var z = 0; z < this.checkboxes.length; z++) {
+                        var elem = this.checkboxes[z];
+                        var input = 
+                                elem[2].clone()
+                                .data("first", i + 1)
+                                .data("second", j + 1)
+                                .change($.proxy(this.checkboxChanged, this));
+                        var panel = $('<span class="grid-cell ' +
+                            elem[1] + '" title="' + 
+                            elem[0] + '"><label>' + 
+                            elem[1] + '</label></span>');
+                        panel.append(input);
+                        cell.append(panel);
+                    }
                 }
                 row.append(cell);
             }
@@ -271,30 +367,37 @@ $(function () {
         }
     };
 
-    ComboboxSelfmaskPlugin.prototype.selectChanged = function () {
+    ComboboxSelfmaskPlugin.prototype.checkboxChanged = function () {
         var connections = {};
-        $('select.combobox').each(function(key, val) {
-            var $select = $(val),
-                first = $select.data('first'),
-                second = $select.data('second'),
-                val = $select.val();
-            if (val == "none") return;
+        $(':checkbox.connection').each(function (key, val) {
+            var $checkbox = $(val),
+                first = $checkbox.data('first'),
+                second = $checkbox.data('second'),
+                val = $checkbox.hasClass("std") ? "std" : "own";
+            if (!$checkbox.prop('checked')) return;
             if (!(first in connections))
                 connections[first] = {}
-            connections[first][second] = val;
+            if (second in connections[first])
+                connections[first][second] = "both";
+            else
+                connections[first][second] = val;
         });
         SelfmaskPluginManager.setConnections(connections);
     };
 
     ComboboxSelfmaskPlugin.prototype.fillForm = function (populationsCount,
 														 connections) {
-        $("select.combobox").each(function (ind, val) {
-            var $select = $(val);
-            var first = $select.data('first'), second = $select.data('second');
+        $(":checkbox.connection").each(function (ind, val) {
+            var $checkbox = $(val);
+            var first = $checkbox.data('first'), second = $checkbox.data('second');
             if (first in connections && second in connections[first]) {
-                $select.val(connections[first][second]);
-            } else {
-                $select.val('none');
+                $checkbox.prop(
+                    'checked',
+                    shouldCheck(
+                        $checkbox.hasClass('std'),
+                        connections[first][second]
+                    )
+                );
             }
         });
     };
@@ -525,6 +628,14 @@ $(function () {
         },
 
         rebuild: function () {
+            setHashParams(
+                this.populationsCount,
+                this.names,
+                this.connectionsToMasks(
+                    this.connections,
+                    this.populationsCount
+                )
+            );
             this.rebuildNamesPanel();
 
             this.plugins.forEach(function (elem) {
@@ -589,13 +700,21 @@ $(function () {
         },
 
         init: function () {
-            this.populationsCount = 4;
-            $("#populations-count-select").val(this.populationsCount);
-
-            this.names = [];
-            for (var i = 1; i <= this.populationsCount; ++i) {
-                this.names.push("Pop " + i);
+            var params = getHashParams();
+            if (params != null) {
+                this.populationsCount = params.populationsCount;
+                this.names = params.populationsNames;
+                this.connections = this.masksToConnections(params.masks,
+                    this.populationsCount
+                );
+            } else {
+                this.names = [];
+                for (var i = 1; i <= this.populationsCount; ++i) {
+                    this.names.push("Pop " + i);
+                }
             }
+
+            $("#populations-count-select").val(this.populationsCount);
 
             this.rebuild();
         }
@@ -605,5 +724,9 @@ $(function () {
 
     $("#populations-count-select").change(function () {
         SelfmaskPluginManager.setPopulationsCount($(this).val());
+    });
+
+    $(window).resize(function () {
+        SelfmaskPluginManager.rebuild();
     });
 });

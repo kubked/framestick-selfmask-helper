@@ -25,3 +25,15 @@ input.hexes {
 	padding: 3px;
 	font-size: 12px;
 }
+
+.grid-cell {
+	margin-right: 5px;
+}
+
+.grid-cell.S>label {
+	color: #aaa;
+}
+
+.grid-cell.C>label {
+	color: #c00;
+}
