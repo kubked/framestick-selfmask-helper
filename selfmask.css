@@ -2,7 +2,7 @@
 #network-graph {
 	height: 400pt;
 	position: relative;
-	background-color: #e5e5e5;
+	background-color: #dddddd;
 }
 
 body {
@@ -13,12 +13,27 @@ body {
 	background-color: #eeeeee;
 }
 
+div.col-md-6 {
+	padding-right: 0;
+	padding-left: 0;
+}
+
+.hexes-panel {
+	padding: 15px;
+}
+
+.combobox-panel {
+	background-color: #e7e7e7;
+	padding: 15px;
+}
+
 #populations-number-panel, #reinitialize-panel {
 	margin: 10pt;
 }
 
 .settings-panel {
-	margin: 10px;
+	padding: 10px;
+	padding-top: 20px;
 }
 
 input.hexes {
