@@ -1,10 +1,10 @@
 describe("Single Mask to Connections tests", function() {
 	it("mask to connection", function() {
 		expect("both").toEqual(
-			SelfmaskPluginManager.maskToConnection(1, (1<<16) + 1)
+			SelfmaskPluginManager.maskToConnection(0xffffffff, (1<<16) + 1)
 		);
 		expect("own").toEqual(
-			SelfmaskPluginManager.maskToConnection(2, (2<<16))
+			SelfmaskPluginManager.maskToConnection(0x20000, (2<<16))
 		);
 	});
 });
@@ -44,7 +44,7 @@ describe("Connections to bitmasks conversion tests", function() {
 		return connections;
 	}
 
-	for (var i = 1; i <= 10; ++i) {
+	for (var i = 1; i <= 20; ++i) {
 		it("random test #"+i, function() {
 			var popSize = 4;
 			var connections = randomConnections(popSize);

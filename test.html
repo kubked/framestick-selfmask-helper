@@ -15,33 +15,14 @@
         <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.3.8/cytoscape.min.js"></script>
         <link href="selfmask.css" rel="stylesheet" type="text/css" />
-        <script type="text/javascript" src="selfmask.js"> </script>
+        <script type="text/javascript" src="selfmask.js" charset="utf-8"> </script>
     </head>
     <body class="body">
         <div class="container">
             <h2>Selfmask & othermask helper</h2>
-            <div class="row">
-                <div class="col-md-6">
-                    <h3>Collisions grid</h3>
-                    <div id="combobox-panel" class="selfmask-panel"></div>
-                    <h3>Selfmask & othermask</h3>
-                    <div id="hexes-panel" class="selfmask-panel"></div>
-                    <p>Note that inputted masks will be overwritten by standarized masks with identical collisions handling definitions.</p>
-                </div>
-                <div class="col-md-6">
-                    <h3>Collisions network</h3>
-                    <div id="network-graph" class="selfmask-panel">
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-2">
-                    <h3>Settings</h3>
-                </div>
-            </div>
             <div class="row form-horizontal settings-panel">
                 <div class="form-group">
-                    <label class="control-label col-md-2" for="populations-count-select">Number of populations:</label>
+                    <label class="control-label col-md-1" for="populations-count-select">Populations:</label>
                     <div class="col-md-1">
                         <select class="select form-control input-sm" id="populations-count-select">
                             <option value="2">2</option>
@@ -50,27 +31,40 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="control-label col-md-2" for="populations-names-panel">Populations names:</label>
-                    <div class="form-group row col-md-10" id="populations-names-panel">
-                        <div class="col-md-3">
-                            <input type="text" class="form-control input-sm"/>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="text" class="form-control input-sm"/>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="text" class="form-control input-sm"/>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="text" class="form-control input-sm"/>
-                        </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="combobox-panel">
+                        <div id="combobox-panel" class="selfmask-panel"></div>
                     </div>
+                    <div class="hexes-panel">
+                        <div id="hexes-panel" class="selfmask-panel"></div>
+                        <div align="right">
+                            <button type="button" id="framscript-button" class="btn btn-info">Copy as FramScript</button>
+                            <button type="button" id="edit-masks-button" class="btn btn-default">Edit</button>
+                            <div id="save-cancel-masks-panel" class="btn-group hidden" role="group">
+                                <button type="button" id="save-masks-button" class="btn btn-primary">Save</button>
+                                <button type="button" id="cancel-masks-button" class="btn btn-default">Cancel</button>
+                            </div>
+                        </div>
+                        <p class="hexes-panel">Entered values may be automatically overwritten with standardized values that produce the same behavior. Click "Edit" to edit masks without overwriting.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div>
+                        <canvas id="network-graph" class="selfmask-panel"/>
+                    </div>
+                </div>
+            </div>
+            <div class="row form-horizontal settings-panel">
+                <div class="form-group">
+                    <label class="control-label col-md-1" for="populations-names-panel">Names:</label>
+                    <div class="form-group row col-md-10" id="populations-names-panel"/>
                 </div>
             </div>
         </div>
     </body>
-
     <!-- tests -->
     <script type="text/javascript" src="test.js"></script>
 </html>
+

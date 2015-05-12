@@ -246,7 +246,6 @@ $(function () {
         this.context.textAlign = "center";
         this.context.textBaseline = "middle";
         this.context.fillText(name, position.x, position.y);
-
     };
     CanvasNetworkPlugin.prototype.drawNodes = function (populationsCount,
                                                         names,
@@ -366,7 +365,6 @@ $(function () {
             comboboxTable.append(row);
         }
     };
-
     ComboboxSelfmaskPlugin.prototype.checkboxChanged = function () {
         var connections = {};
         $(':checkbox.connection').each(function (key, val) {
@@ -384,7 +382,6 @@ $(function () {
         });
         SelfmaskPluginManager.setConnections(connections);
     };
-
     ComboboxSelfmaskPlugin.prototype.fillForm = function (populationsCount,
 														 connections) {
         $(":checkbox.connection").each(function (ind, val) {
@@ -401,7 +398,6 @@ $(function () {
             }
         });
     };
-
     ComboboxSelfmaskPlugin.prototype.rebuild = function (populationsCount,
 														names,
 														connections) {
@@ -412,7 +408,9 @@ $(function () {
     /*
 	 * HexesPlugin
 	 */
-    function HexesSelfmaskPlugin() { };
+    function HexesSelfmaskPlugin() {
+        this.autocorrect = true;
+    };
 
     HexesSelfmaskPlugin.prototype = new TablePlugin;
     HexesSelfmaskPlugin.prototype.buildForm = function (populationsCount,
@@ -441,20 +439,36 @@ $(function () {
         hexesTable.append(createRow.call(this, "Selfmask"));
         hexesTable.append(createRow.call(this, "Othermask"));
     };
+    HexesSelfmaskPlugin.prototype.validate = function () {
+        this.clearValidation();
 
+        var valid = true;
+        var pattern = new RegExp("^(0x){0,1}([A-Fa-f0-9]{1,8})$");
+        $("input.hexes").each(function (key, val) {
+            var $input = $(val);
+            var mask = parseInt($input.val(), 16);
+            if (!pattern.test($input.val()) || isNaN(mask)) {
+                valid = false;
+                $input.parent().addClass("has-error");
+            }
+        });
+        return valid;
+    },
+    HexesSelfmaskPlugin.prototype.clearValidation = function () {
+        $("input.hexes").parent().removeClass("has-error");
+    },
     /**
      * Read masks from input and return converted to connections.
-     * If masks are not valid, get connections from SelfmaskPluginManager.
+     * If masks are not valid, returns null
      */
     HexesSelfmaskPlugin.prototype.getConnections = function () {
         var masks = { selfmasks: {}, othermasks: {} };
-        var valid = true;
+        var valid = this.validate();
         $("input.hexes").each(function (key, val) {
             var $input = $(val),
                 num = $input.data("number"),
                 rowName = $input.data("rowName");
             var mask = parseInt($input.val(), 16);
-            if (isNaN(mask)) valid = false;
             masks[rowName == "Othermask" ? "othermasks" : "selfmasks"][num] = mask;
         });
         if (valid) {
@@ -466,19 +480,19 @@ $(function () {
         }
         return null;
     };
-
     HexesSelfmaskPlugin.prototype.inputValueChanged = function () {
+        if (!(this.autocorrect)) return;
         var connections = this.getConnections();
         if (connections == null) {
             this.fillForm(
                 SelfmaskPluginManager.populationsCount,
                 SelfmaskPluginManager.connections
             );
+            this.clearValidation();
         } else {
             SelfmaskPluginManager.setConnections(connections);
         }
     };
-
     HexesSelfmaskPlugin.prototype.fillForm = function (populationsCount,
 														connections) {
         var masks = SelfmaskPluginManager.connectionsToMasks(
@@ -494,7 +508,6 @@ $(function () {
             }
         });
     };
-
     HexesSelfmaskPlugin.prototype.rebuild = function (populationsCount,
 													  names,
 													  connections) {
@@ -532,11 +545,11 @@ $(function () {
             return mask;
         },
 
-        maskToConnection: function (to, mask) {
-            var lowmask = 1 << (to - 1);
+        maskToConnection: function (selfmask, othermask) {
+            var lowmask = 65535;
             var highmask = lowmask << 16;
-            var isCustom = mask & highmask,
-				isStandard = mask & lowmask;
+            var isCustom = selfmask & othermask & highmask,
+				isStandard = selfmask & othermask & lowmask;
 
             if (isCustom && isStandard) {
                 return "both";
@@ -545,6 +558,17 @@ $(function () {
             } else if (isStandard) {
                 return "std";
             }
+            return "none";
+        },
+
+        joinTwoConnections: function (first, second) {
+            if (first == "both" || second == "both")
+                return "both";
+            if ((first == "own" && second == "std") ||
+                (first == "std" && second == "own"))
+                return "both";
+            if (first == "own" || second == "own") return "own";
+            if (first == "std" || second == "std") return "std";
             return "none";
         },
 
@@ -579,8 +603,14 @@ $(function () {
             for (var i = 1; i <= populationsCount; ++i) {
                 var conns = {};
                 for (var j = i; j <= populationsCount; ++j) {
-                    var connection = this.maskToConnection(i,
-									  	  	  	masks.othermasks[j]);
+                    var connection = this.joinTwoConnections(
+                        this.maskToConnection(
+                            masks.selfmasks[i], masks.othermasks[j]
+                        ),
+                        this.maskToConnection(
+                            masks.selfmasks[j], masks.othermasks[i]
+                        )
+                    );
                     if (connection != "none") {
                         conns[j] = connection;
                     }
@@ -685,6 +715,53 @@ $(function () {
             this.rebuild();
         },
 
+        getFramScript: function () {
+            var result = "";
+            var masks = this.connectionsToMasks(this.connections, this.populationsCount);
+
+            for (var i = 0; i < this.populationsCount; i++) {
+                result += 'Population[' + i + '].name="' + this.names[i] + '";\n';
+                result += 'Population[' + i + '].selfmask=' + this.intToHex(masks.selfmasks[i+1]) + ';\n';
+                result += 'Population[' + i + '].othermask=' + this.intToHex(masks.othermasks[i+1]) + ';\n';
+            }
+
+            return result;
+        },
+
+        editMasksMode: function () {
+            // disable all inputs except hexes panel textboxes and save/cancel buttons
+            $("select").add("input")
+                .add("checkbox").add("button")
+                .not("#save-masks-button")
+                .not("#cancel-masks-button")
+                .not("input.hexes")
+                .prop('disabled', true);
+            // disable hexes autocorrect
+            this.plugins[1].autocorrect = false; // ugly! depends on plugins order
+            // hide edit button and show save/cancel buttons
+            $("#edit-masks-button").add("#save-cancel-masks-panel").toggleClass("hidden");
+        },
+
+        exitMasksMode: function () {
+            this.plugins[1].autocorrect = true; // ugly! depends on plugins order
+            
+            this.rebuild();
+
+            // enable all inputs
+            $("select").add("input")
+                .add("checkbox").add("button")
+                .prop('disabled', false);
+            // hide edit button and show save/cancel buttons
+            $("#edit-masks-button").add("#save-cancel-masks-panel").toggleClass("hidden");
+        },
+
+        saveEditedMasks: function () {
+            var connections = this.plugins[1].getConnections(); // ugly: depends on plugins order
+            if (connections != null) {
+                this.setConnections(connections);
+                this.exitMasksMode();
+            }
+        },
 
         intToHex: function (num) {
             return "0x" + (("00000000" + num.toString(16)).substr(-8));
@@ -721,6 +798,25 @@ $(function () {
 
     $("#populations-count-select").change(function () {
         SelfmaskPluginManager.setPopulationsCount($(this).val());
+    });
+
+    $("#framscript-button").click(function () {
+        window.prompt(
+            "Copy to clipboard: Ctrl+C (⌘C), Enter",
+            SelfmaskPluginManager.getFramScript()
+        );
+    });
+
+    $("#edit-masks-button").click(function() {
+        SelfmaskPluginManager.editMasksMode();
+    })
+
+    $("#cancel-masks-button").click(function() {
+        SelfmaskPluginManager.exitMasksMode();
+    });
+
+    $("#save-masks-button").click(function() {
+        SelfmaskPluginManager.saveEditedMasks();
     });
 
     $(window).resize(function () {
